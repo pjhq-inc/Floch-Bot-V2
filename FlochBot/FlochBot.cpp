@@ -61,7 +61,7 @@ int main() {
     }
 
     std::string input;
-    while (true) {
+    while (true && (input == null)) {
         std::cout << "\nYou: ";
         std::getline(std::cin, input);
         if (input == "exit") break;
