@@ -15,19 +15,18 @@ def main():
         "model/merges.txt"
     )
     
-
     model = GPT2LMHeadModel(config).to(device)
+    print(f"Using device: {device}")
+    print(f"CUDA available: {torch.cuda.is_available()}")
+    print(f"GPU name: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
     print(f"Model parameters: {model.num_parameters():,}")
     
-
     dataset = DiscordDataset("discord_clean.txt", tokenizer)
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
     
-
     optimizer = optim.AdamW(model.parameters(), lr=5e-5)
-    num_epochs = 1
+    num_epochs = 3
     
-
     model.train()
     for epoch in range(num_epochs):
         total_loss = 0
