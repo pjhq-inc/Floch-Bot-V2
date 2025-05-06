@@ -25,7 +25,7 @@ def main():
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
     
     optimizer = optim.AdamW(model.parameters(), lr=5e-5)
-    num_epochs = 3
+    num_epochs = 20
     
     model.train()
     for epoch in range(num_epochs):

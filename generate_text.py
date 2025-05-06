@@ -2,7 +2,7 @@ from transformers import GPT2LMHeadModel
 from tokenizers import ByteLevelBPETokenizer
 import torch
 
-def generate_text(prompt, max_length=100, temperature=0.7):
+def generate_text(prompt, max_length=60, temperature=0.63):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
 
@@ -25,16 +25,16 @@ def generate_text(prompt, max_length=100, temperature=0.7):
         pad_token_id=tokenizer.token_to_id("<|endoftext|>"),
         eos_token_id=tokenizer.token_to_id("<|endoftext|>"),
         no_repeat_ngram_size=2,
-        early_stopping=True
+        early_stopping=False
     )
     
     return tokenizer.decode(output[0].tolist(), skip_special_tokens=True)
 
 if __name__ == "__main__":
-    print("Chat with your AI (type 'exit' or 'quit' to end)")
+    print("Chat with your floch (type 'exit' or 'quit' to end)")
     while True:
-        prompt = input("You: ")
+        prompt = input("input: ")
         if prompt.lower() in ['exit', 'quit']:
             break
         response = generate_text(prompt)
-        print(f"Bot: {response}")
+        print(f"floch: {response}")
