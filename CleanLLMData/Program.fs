@@ -31,5 +31,5 @@ let processFile (filePath: string) =
 
     printfn "File cleaned and saved."
 
-let filePath = @"C:\Users\benja\Downloads\FlochGPT2\FlochGPT2\discord_clean.txt"
+let filePath = @"discord_clean.txt" //your filepath here
 processFile filePath
