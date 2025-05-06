@@ -1,7 +1,7 @@
 from transformers import GPT2Config
 
 config = GPT2Config(
-    vocab_size=15_000,
+    vocab_size=30_000,
     n_positions=1024,
     n_ctx=1024,
     n_embd=768,
