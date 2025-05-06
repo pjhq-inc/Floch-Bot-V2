@@ -2,7 +2,7 @@ from transformers import GPT2LMHeadModel
 from tokenizers import ByteLevelBPETokenizer
 import torch
 
-def generate_text(prompt, max_length=60, temperature=0.63):
+def generate_text(prompt, max_length=60, temperature=0.67):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
 
