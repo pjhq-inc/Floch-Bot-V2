@@ -1,40 +1,65 @@
-from transformers import GPT2LMHeadModel
-from tokenizers import ByteLevelBPETokenizer
 import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
 
-def generate_text(prompt, max_length=60, temperature=0.67):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+# Path to your model directory
+model_path = "model"
 
-    tokenizer = ByteLevelBPETokenizer(
-        "model/vocab.json",
-        "model/merges.txt"
+def build_prompt(user_input):
+    system_prompt = (
+        "### SYSTEM:\n"
+        "You are floch, an stupid, aggressive AI kuudra mandible hunter.\n"
+        "### USER:\n"
+        f"{user_input}\n"
+        "### ASSISTANT:\n"
     )
-    model = GPT2LMHeadModel.from_pretrained("model").to(device)
-    
-    encoding = tokenizer.encode(prompt)
-    input_ids = torch.tensor([encoding.ids], dtype=torch.long).to(device)
-    attention_mask = torch.tensor([encoding.attention_mask], dtype=torch.long).to(device)
-    
-    output = model.generate(
-        input_ids=input_ids,
-        attention_mask=attention_mask,
-        max_length=max_length,
-        temperature=temperature,
-        do_sample=True,
-        pad_token_id=tokenizer.token_to_id("<|endoftext|>"),
-        eos_token_id=tokenizer.token_to_id("<|endoftext|>"),
-        no_repeat_ngram_size=2,
-        early_stopping=False
-    )
-    
-    return tokenizer.decode(output[0].tolist(), skip_special_tokens=True)
+    return system_prompt + "User: " + user_input + "\nAI:"
 
+# Load model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
+generation_config = GenerationConfig.from_pretrained(model_path)
+
+# Move model to GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+def generate_text(prompt, max_length=150):
+    # Tokenize input
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+
+    # Generate output
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            generation_config=generation_config,
+            max_length=inputs["input_ids"].shape[1] + max_length,
+            do_sample=True,
+            temperature=0.7,     # Lower is more deterministic (0.7 is a good default)
+            top_k=50,            # Limits next-token choices to top K
+            top_p=0.9,           # Limits to top P% probability mass
+            repetition_penalty=1.1,  # Discourage repeating phrases
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.eos_token_id,
+            num_beams=5
+    )
+    # Decode and return
+    decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    # Remove the prompt from the beginning of the response
+    if decoded.startswith(prompt):
+        response_text = decoded[len(prompt):].strip()
+    else:
+        response_text = decoded.strip()
+    response_text = response_text.split("User:")[0].strip()
+    return response_text
+
+# Example usage
 if __name__ == "__main__":
-    print("Chat with your floch (type 'exit' or 'quit' to end)")
     while True:
-        prompt = input("input: ")
-        if prompt.lower() in ['exit', 'quit']:
+        prompt = input("Enter a prompt: ")
+        response = generate_text(build_prompt(prompt))
+# Truncate anything after next "User:" if it exists
+        response = response.split("User:")[0].split('###')[0].strip()
+        if prompt == 'quit':
             break
-        response = generate_text(prompt)
-        print(f"floch: {response}")
+        print("\nGenerated text:\n", response)
